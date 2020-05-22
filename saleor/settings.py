@@ -5,6 +5,7 @@ from datetime import timedelta
 
 import dj_database_url
 import dj_email_url
+import django_cache_url
 import jaeger_client
 import jaeger_client.config
 import sentry_sdk
@@ -83,6 +84,7 @@ LANGUAGES = [
     ("es-co", "Colombian Spanish"),
     ("et", "Estonian"),
     ("fa", "Persian"),
+    ("fi", "Finnish"),
     ("fr", "French"),
     ("hi", "Hindi"),
     ("hu", "Hungarian"),
@@ -102,10 +104,12 @@ LANGUAGES = [
     ("ro", "Romanian"),
     ("ru", "Russian"),
     ("sk", "Slovak"),
+    ("sl", "Slovenian"),
     ("sq", "Albanian"),
     ("sr", "Serbian"),
-    ("sw", "Swahili"),
     ("sv", "Swedish"),
+    ("sw", "Swahili"),
+    ("ta", "Tamil"),
     ("th", "Thai"),
     ("tr", "Turkish"),
     ("uk", "Ukrainian"),
@@ -462,8 +466,7 @@ GRAPHQL_JWT = {
     # How long until a token expires, default is 5m from graphql_jwt.settings
     "JWT_EXPIRATION_DELTA": timedelta(minutes=5),
     # Whether the JWT tokens should expire or not
-    # Enabled by default in production mode; disabled in development mode by default
-    "JWT_VERIFY_EXPIRATION": get_bool_from_env("JWT_VERIFY_EXPIRATION", not DEBUG),
+    "JWT_VERIFY_EXPIRATION": get_bool_from_env("JWT_VERIFY_EXPIRATION", False),
 }
 
 # CELERY SETTINGS
@@ -547,3 +550,10 @@ if "JAEGER_AGENT_HOST" in os.environ:
         service_name="saleor",
         validate=True,
     ).initialize_tracer()
+
+
+# Some cloud providers (Heroku) export REDIS_URL variable instead of CACHE_URL
+REDIS_URL = os.environ.get("REDIS_URL")
+if REDIS_URL:
+    CACHE_URL = os.environ.setdefault("CACHE_URL", REDIS_URL)
+CACHES = {"default": django_cache_url.config()}
